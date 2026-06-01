@@ -15,8 +15,9 @@ model User {
 model Website {
   id        String        @id        @default(uuid())
   url       String
-  userid    String
+  userId    String
   ticks     WebsiteTick[]
+  disabled  Boolean       @default(false)
 }
 
 
