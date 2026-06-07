@@ -8,39 +8,38 @@ datasource db {
 }
 
 model User {
-  id        String        @id        @default(uuid())
-  email     String
+  id    String @id @default(uuid())
+  email String
 }
 
 model Website {
-  id        String        @id        @default(uuid())
-  url       String
-  userId    String
-  ticks     WebsiteTick[]
-  disabled  Boolean       @default(false)
+  id       String        @id @default(uuid())
+  url      String
+  userId   String
+  ticks    WebsiteTick[]
+  disabled Boolean       @default(false)
 }
 
-
 model Validator {
-  id        String        @id        @default(uuid())
+  id        String        @id @default(uuid())
   location  String
-  publickey String
+  publicKey String
   ip        String
   ticks     WebsiteTick[]
 }
 
 model WebsiteTick {
-  id              String        @id       @default(uuid())
-  WebsiteId       String    
-  ValidatorId     String
-  createdAt       DateTime      @default(now())
-  status          WebsiteStatus
-  latency         Float
-  Website         Website       @relation(fields: [WebsiteId], references: [id])
-  Validator       Validator     @relation(fields: [ValidatorId], references: [id])
+  id          String        @id @default(uuid())
+  websiteId   String
+  validatorId String
+  createdAt   DateTime      @default(now())
+  status      WebsiteStatus
+  latency     Float
+  website     Website       @relation(fields: [websiteId], references: [id])
+  validator   Validator     @relation(fields: [validatorId], references: [id])
 }
 
-enum WebsiteStatus{
+enum WebsiteStatus {
   Good
   Bad
 }
