@@ -2,16 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Activity,
   ArrowRight,
   CheckCircle2,
   Clock3,
   Globe2,
-  Moon,
   Radio,
   Server,
   ShieldCheck,
-  Sun,
   Vote,
   Waves,
 } from "lucide-react";
@@ -32,44 +29,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#0b0c0e] text-zinc-100">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <header className="border-b border-zinc-900 py-5">
-          <div className="flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              className="flex items-center gap-3"
-            >
-              <div className="flex h-9 w-9 items-center justify-center border border-zinc-800 bg-[#111214]">
-                <Activity className="h-4.5 w-4.5 text-zinc-200" />
-              </div>
-
-              <div className="text-left">
-                <p className="text-sm font-medium text-zinc-100">Atlas Uptime</p>
-                <p className="text-xs text-zinc-500">Validator-backed monitoring</p>
-              </div>
-            </button>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="border border-zinc-800 p-2.5 text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-200"
-              >
-                {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="inline-flex items-center gap-2 bg-zinc-100 px-4 py-2.5 text-sm font-medium text-zinc-950 transition hover:bg-white"
-              >
-                Open dashboard
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </header>
+        
 
         <main>
-          <section className="grid gap-14 border-b border-zinc-900 py-16 lg:grid-cols-[1.2fr_0.95fr] lg:items-end lg:py-24">
+          <section className="grid gap-14 border-b border-zinc-900 py-0 lg:grid-cols-[1.2fr_0.95fr] lg:items-end lg:py-24">
             <div>
               <div className="mb-5 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
