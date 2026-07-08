@@ -3,44 +3,105 @@ import type { OutgoingMessage, SignupOutgoingMessage, ValidateOutgoingMessage } 
 import { Keypair } from "@solana/web3.js";
 import nacl from "tweetnacl";
 import nacl_util from "tweetnacl-util";
+import dotenv from "dotenv";
+dotenv.config();
 
 const CALLBACKS: {[callbackId: string]: (data: SignupOutgoingMessage) => void} = {}
 
 let validatorId: string | null = null;
 
+// async function main() {
+//     const keypair = Keypair.fromSecretKey(
+//         Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY!))
+//     );
+//     console.log("Validator Public Key:", keypair.publicKey.toBase58());
+//     const ws = new WebSocket("ws://localhost:8081");
+
+//     ws.onmessage = async (event) => {
+//         const data: OutgoingMessage = JSON.parse(event.data);
+//         if (data.type === 'signup') {
+//             CALLBACKS[data.data.callbackId]?.(data.data)
+//             delete CALLBACKS[data.data.callbackId];
+//         } else if (data.type === 'validate') {
+//             await validateHandler(ws, data.data, keypair);
+//         }
+//     }
+
+//     ws.onopen = async () => {
+//         const callbackId = randomUUIDv7();
+//         CALLBACKS[callbackId] = (data: SignupOutgoingMessage) => {
+//             validatorId = data.validatorId;
+//         }
+//         const signedMessage = await signMessage(`Signed message for ${callbackId}, ${keypair.publicKey}`, keypair);
+
+//         ws.send(JSON.stringify({
+//             type: 'signup',
+//             data: {
+//                 callbackId,
+//                 ip: '127.0.0.1',
+//                 publicKey: keypair.publicKey,
+//                 signedMessage,
+//             },
+//         }));
+//     }
+// }
+
 async function main() {
     const keypair = Keypair.fromSecretKey(
         Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY!))
     );
+
+    console.log("Validator Public Key:", keypair.publicKey.toBase58());
+
+    console.log("Creating websocket...");
     const ws = new WebSocket("ws://localhost:8081");
 
-    ws.onmessage = async (event) => {
-        const data: OutgoingMessage = JSON.parse(event.data);
-        if (data.type === 'signup') {
-            CALLBACKS[data.data.callbackId]?.(data.data)
-            delete CALLBACKS[data.data.callbackId];
-        } else if (data.type === 'validate') {
-            await validateHandler(ws, data.data, keypair);
-        }
-    }
-
     ws.onopen = async () => {
+        console.log("✅ Connected to Hub");
+
         const callbackId = randomUUIDv7();
+
         CALLBACKS[callbackId] = (data: SignupOutgoingMessage) => {
             validatorId = data.validatorId;
-        }
-        const signedMessage = await signMessage(`Signed message for ${callbackId}, ${keypair.publicKey}`, keypair);
+            console.log("✅ Received validatorId:", validatorId);
+        };
+
+        const signedMessage = await signMessage(
+            `Signed message for ${callbackId}, ${keypair.publicKey}`,
+            keypair
+        );
 
         ws.send(JSON.stringify({
-            type: 'signup',
+            type: "signup",
             data: {
                 callbackId,
-                ip: '127.0.0.1',
+                ip: "127.0.0.1",
                 publicKey: keypair.publicKey,
                 signedMessage,
             },
         }));
-    }
+    };
+
+    ws.onmessage = async (event) => {
+        console.log("📩 Message from Hub:", event.data);
+
+        const data: OutgoingMessage = JSON.parse(event.data);
+
+        if (data.type === "signup") {
+            CALLBACKS[data.data.callbackId]?.(data.data);
+            delete CALLBACKS[data.data.callbackId];
+        } else if (data.type === "validate") {
+            await validateHandler(ws, data.data, keypair);
+        }
+    };
+
+    ws.onerror = (err) => {
+        console.log("❌ WebSocket Error:", err);
+    };
+
+    ws.onclose = () => {
+        console.log("❌ Connection closed");
+    };
 }
 
 async function validateHandler(ws: WebSocket, { url, callbackId, websiteId }: ValidateOutgoingMessage, keypair: Keypair) {

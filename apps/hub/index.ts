@@ -11,18 +11,31 @@ const CALLBACKS: { [callbackId: string]: (data: IncomingMessage) => void } = {}
 const COST_PER_VALIDATION = 100; // in lamports
 
 Bun.serve({
-    fetch(req, server) {
-        //   if (server.upgrade(req)) {
-        //     return;
-        //   }
+    // fetch(req, server) {
+    //     //   if (server.upgrade(req)) {
+    //     //     return;
+    //     //   }
 
-        if (server.upgrade(req, {
-            data: {}
-        })) {
-            return;
-        }
-        return new Response("Upgrade failed", { status: 500 });
-    },
+    //     if (server.upgrade(req, {
+    //         data: {}
+    //     })) {
+    //         return;
+    //     }
+    //     return new Response("Upgrade failed", { status: 500 });
+    // }
+    fetch(req, server) {
+    console.log("Incoming request:", req.url);
+
+    if (server.upgrade(req, {
+        data: {}
+    })) {
+        console.log("WebSocket upgraded");
+        return;
+    }
+
+    console.log("Upgrade failed");
+    return new Response("Upgrade failed", { status: 500 });
+},
     port: 8081,
     websocket: {
         async message(ws: ServerWebSocket<unknown>, message: string) {
@@ -73,7 +86,7 @@ async function signupHandler(ws: ServerWebSocket<unknown>, { ip, publicKey, sign
         return;
     }
 
-    //TODO: Given the ip, return the location
+    // Given the ip, return the location
     const validator = await prismaClient.validator.create({
         data: {
             ip,
@@ -150,12 +163,7 @@ setInterval(async () => {
                             },
                         });
 
-                        await tx.validator.update({
-                            where: { id: validatorId },
-                            data: {
-                                pendingPayouts: { increment: COST_PER_VALIDATION },
-                            },
-                        });
+                       //payouts can be added
                     });
                 }
             };

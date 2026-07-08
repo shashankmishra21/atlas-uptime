@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "atlas-uptime",
+      "dependencies": {
+        "dotenv": "^17.4.2",
+      },
       "devDependencies": {
         "prettier": "^3.7.4",
         "turbo": "^2.9.16",
