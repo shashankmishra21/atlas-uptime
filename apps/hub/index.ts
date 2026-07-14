@@ -174,8 +174,11 @@ setInterval(async () => {
                             createdAt: new Date(),
                         },
                     });
-
+                    console.log(
+                        `✅ Response from ${validatorId} | ${website.url} | ${status} | ${latency}ms`
+                    );
                 }
+
             };
         });
     }
