@@ -24,18 +24,18 @@ Bun.serve({
     //     return new Response("Upgrade failed", { status: 500 });
     // }
     fetch(req, server) {
-    console.log("Incoming request:", req.url);
+        console.log("Incoming request:", req.url);
 
-    if (server.upgrade(req, {
-        data: {}
-    })) {
-        console.log("WebSocket upgraded");
-        return;
-    }
+        if (server.upgrade(req, {
+            data: {}
+        })) {
+            console.log("WebSocket upgraded");
+            return;
+        }
 
-    console.log("Upgrade failed");
-    return new Response("Upgrade failed", { status: 500 });
-},
+        console.log("Upgrade failed");
+        return new Response("Upgrade failed", { status: 500 });
+    },
     port: 8081,
     websocket: {
         async message(ws: ServerWebSocket<unknown>, message: string) {
@@ -83,6 +83,15 @@ async function signupHandler(ws: ServerWebSocket<unknown>, { ip, publicKey, sign
             socket: ws,
             publicKey: validatorDb.publicKey,
         });
+
+        console.log(
+            `Validator connected: ${validatorDb.id}`
+        );
+
+        console.log(
+            `Currently connected: ${availableValidators.length}`
+        );
+
         return;
     }
 
@@ -140,6 +149,8 @@ setInterval(async () => {
                 },
             }));
 
+
+
             CALLBACKS[callbackId] = async (data: IncomingMessage) => {
                 if (data.type === 'validate') {
                     const { validatorId, status, latency, signedMessage } = data.data;
@@ -152,19 +163,18 @@ setInterval(async () => {
                         return;
                     }
 
-                    await prismaClient.$transaction(async (tx) => {
-                        await tx.websiteTick.create({
-                            data: {
-                                websiteId: website.id,
-                                validatorId,
-                                status,
-                                latency,
-                                createdAt: new Date(),
-                            },
-                        });
 
-                       //payouts can be added
+
+                    await prismaClient.websiteTick.create({
+                        data: {
+                            websiteId: website.id,
+                            validatorId,
+                            status,
+                            latency,
+                            createdAt: new Date(),
+                        },
                     });
+
                 }
             };
         });
