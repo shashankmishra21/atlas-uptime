@@ -4,7 +4,15 @@ import { Keypair } from "@solana/web3.js";
 import nacl from "tweetnacl";
 import nacl_util from "tweetnacl-util";
 import dotenv from "dotenv";
-dotenv.config();
+
+dotenv.config({
+  path: process.env.ENV_FILE || ".env",
+     override: true,
+
+});
+
+console.log("ENV_FILE =", process.env.ENV_FILE);
+console.log("Loaded PRIVATE_KEY starts with:", process.env.PRIVATE_KEY?.slice(0, 25));
 
 const CALLBACKS: {[callbackId: string]: (data: SignupOutgoingMessage) => void} = {}
 
