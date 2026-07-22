@@ -131,55 +131,71 @@ async function verifyMessage(message: string, publicKey: string, signature: stri
 }
 
 setInterval(async () => {
-    const websitesToMonitor = await prismaClient.website.findMany({
-        where: {
-            disabled: false,
-        },
-    });
-
-    for (const website of websitesToMonitor) {
-        availableValidators.forEach(validator => {
-            const callbackId = randomUUIDv7();
-            console.log(`Sending validate to ${validator.validatorId} ${website.url}`);
-            validator.socket.send(JSON.stringify({
-                type: 'validate',
-                data: {
-                    url: website.url,
-                    callbackId
-                },
-            }));
-
-
-
-            CALLBACKS[callbackId] = async (data: IncomingMessage) => {
-                if (data.type === 'validate') {
-                    const { validatorId, status, latency, signedMessage } = data.data;
-                    const verified = await verifyMessage(
-                        `Replying to ${callbackId}`,
-                        validator.publicKey,
-                        signedMessage
-                    );
-                    if (!verified) {
-                        return;
-                    }
-
-
-
-                    await prismaClient.websiteTick.create({
-                        data: {
-                            websiteId: website.id,
-                            validatorId,
-                            status,
-                            latency,
-                            createdAt: new Date(),
-                        },
-                    });
-                    console.log(
-                        `✅ Response from ${validatorId} | ${website.url} | ${status} | ${latency}ms`
-                    );
-                }
-
-            };
+    try {
+        const websitesToMonitor = await prismaClient.website.findMany({
+            where: {
+                disabled: false,
+            },
         });
+
+        for (const website of websitesToMonitor) {
+            availableValidators.forEach((validator) => {
+                const callbackId = randomUUIDv7();
+
+                console.log(
+                    `Sending validate to ${validator.validatorId} ${website.url}`
+                );
+
+                validator.socket.send(
+                    JSON.stringify({
+                        type: "validate",
+                        data: {
+                            url: website.url,
+                            callbackId,
+                        },
+                    })
+                );
+
+                CALLBACKS[callbackId] = async (data: IncomingMessage) => {
+                    try {
+                        if (data.type === "validate") {
+                            const {
+                                validatorId,
+                                status,
+                                latency,
+                                signedMessage,
+                            } = data.data;
+
+                            const verified = await verifyMessage(
+                                `Replying to ${callbackId}`,
+                                validator.publicKey,
+                                signedMessage
+                            );
+
+                            if (!verified) {
+                                console.log(`Invalid signature from ${validatorId}`);
+                                return;
+                            }
+
+                            await prismaClient.websiteTick.create({
+                                data: {
+                                    websiteId: website.id,
+                                    validatorId,
+                                    status,
+                                    latency,
+                                    createdAt: new Date(),
+                                },
+                            });
+
+                            console.log(`Response from ${validatorId} | ${website.url} | ${status} | ${latency}ms`);
+                        }
+                    } catch (err) {
+                        console.error(`Error processing validator response:`, err);
+                    }
+                };
+            });
+        }
+    } catch (err) {
+        console.error("Hub monitoring cycle failed:", err);
     }
 }, 60 * 1000);
