@@ -1,21 +1,7 @@
 "use client";
-
 import React, { useMemo, useState } from "react";
 import axios from "axios";
-import {
-  Activity,
-  ChevronDown,
-  ChevronUp,
-  Clock3,
-  Globe,
-  Moon,
-  Plus,
-  Radio,
-  Server,
-  Sun,
-  Vote,
-  Waves,
-} from "lucide-react";
+import { Activity, ChevronDown, ChevronUp, Clock3, Globe, Moon, Plus, Sun } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { useWebsites } from "@/hooks/useWebsites";
 import { API_BACKEND_URL } from "@/config";
@@ -28,24 +14,10 @@ interface ProcessedWebsite {
   status: UptimeStatus;
   uptimePercentage: number;
   lastChecked: string;
+  latestLatency: number;
   uptimeTicks: UptimeStatus[];
 }
 
-interface ValidatorNode {
-  id: string;
-  region: string;
-  lastSeen: string;
-  successRate: string;
-  averageLatency: string;
-  status: "healthy" | "lagging" | "offline";
-}
-
-interface EventItem {
-  id: string;
-  type: string;
-  message: string;
-  time: string;
-}
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -89,30 +61,6 @@ function getMonitorStatusClasses(status: UptimeStatus) {
   };
 }
 
-function getValidatorStatusClasses(status: ValidatorNode["status"]) {
-  if (status === "healthy") {
-    return {
-      dot: "bg-emerald-400",
-      text: "text-emerald-300",
-      label: "Healthy",
-    };
-  }
-
-  if (status === "lagging") {
-    return {
-      dot: "bg-amber-400",
-      text: "text-amber-300",
-      label: "Lagging",
-    };
-  }
-
-  return {
-    dot: "bg-zinc-500",
-    text: "text-zinc-400",
-    label: "Offline",
-  };
-}
-
 function StatusDot({ className }: { className: string }) {
   return <span className={cx("h-2.5 w-2.5 rounded-full", className)} />;
 }
@@ -135,12 +83,7 @@ function UptimeStrip({ ticks }: { ticks: UptimeStatus[] }) {
   );
 }
 
-function Metric({
-  label,
-  value,
-  hint,
-  valueClassName,
-}: {
+function Metric({ label, value, hint, valueClassName }: {
   label: string;
   value: string;
   hint?: string;
@@ -222,142 +165,113 @@ function WebsiteRow({ website }: { website: ProcessedWebsite }) {
         onClick={() => setExpanded((prev) => !prev)}
         className="w-full px-4 py-4 text-left transition hover:bg-white/[0.02]"
       >
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,2.2fr)_0.9fr_0.9fr_0.9fr_auto] lg:items-center">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,2.4fr)_1fr_1fr_auto] lg:items-center">
+          {/* Website */}
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <StatusDot className={statusStyles.dot} />
-              <p className="truncate text-sm font-medium text-zinc-100">{hostname}</p>
+              <p className="truncate text-sm font-medium text-zinc-100">
+                {hostname}
+              </p>
             </div>
-            <p className="mt-1 truncate pl-[22px] text-sm text-zinc-500">{website.url}</p>
+
+            <p className="mt-1 truncate pl-[22px] text-sm text-zinc-500">
+              {website.url}
+            </p>
           </div>
 
+          {/* Status */}
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
               Status
             </p>
-            <p className={cx("text-sm", statusStyles.text)}>{getStatusText(website.status)}</p>
+
+            <p className={cx("text-sm font-medium", statusStyles.text)}>
+              {getStatusText(website.status)}
+            </p>
           </div>
 
+          {/* Uptime */}
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
               Uptime
             </p>
-            <p className="text-sm text-zinc-200">{website.uptimePercentage.toFixed(1)}%</p>
-          </div>
 
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
-              Consensus
-            </p>
-            <p className="text-sm text-zinc-400">
-              {website.status === "unknown" ? "Awaiting votes" : "Majority vote"}
+            <p className="text-sm text-zinc-200">
+              {website.uptimePercentage.toFixed(1)}%
             </p>
           </div>
 
+          {/* Last Checked */}
           <div className="flex items-center justify-between gap-3 lg:justify-end">
-            <p className="text-sm text-zinc-500">{website.lastChecked}</p>
+            <p className="text-sm text-zinc-500">
+              {website.lastChecked}
+            </p>
+
             <div className="text-zinc-500">
-              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {expanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
             </div>
           </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4">
-          <div className="ml-[22px] border-l border-zinc-800 pl-4">
+        <div className="px-4 pb-5">
+          <div className="ml-[22px] border-l border-zinc-800 pl-5">
+
+            {/* Health History */}
             <div className="max-w-xl">
               <div className="mb-2 flex items-center justify-between text-xs text-zinc-500">
-                <span>Last 30 minutes</span>
-                <span>Consensus windows</span>
+                <span>Recent Health Checks</span>
+                <span>Last 30 Minutes</span>
               </div>
+
               <UptimeStrip ticks={website.uptimeTicks} />
             </div>
 
-            <div className="mt-3 grid gap-2 text-sm text-zinc-400 sm:grid-cols-3">
-              <p>
-                Current state: <span className={statusStyles.soft}>{getStatusText(website.status)}</span>
-              </p>
-              <p>
-                Decision mode: <span className="text-zinc-200">Majority vote</span>
-              </p>
-              <p>
-                Last activity: <span className="text-zinc-200">{website.lastChecked}</span>
-              </p>
+            {/* Details */}
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+
+              <div className="rounded border border-zinc-800 bg-zinc-900/30 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Current Status
+                </p>
+
+                <p className={cx("mt-2 text-sm font-medium", statusStyles.soft)}>
+                  {getStatusText(website.status)}
+                </p>
+              </div>
+
+              <div className="rounded border border-zinc-800 bg-zinc-900/30 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Latest Latency
+                </p>
+
+                <p className="mt-2 text-sm text-zinc-200">
+                  {website.latestLatency > 0
+                    ? `${website.latestLatency} ms`
+                    : "--"}
+                </p>
+              </div>
+
+              <div className="rounded border border-zinc-800 bg-zinc-900/30 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Last Checked
+                </p>
+
+                <p className="mt-2 text-sm text-zinc-200">
+                  {website.lastChecked}
+                </p>
+              </div>
+
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function ValidatorRow({ validator }: { validator: ValidatorNode }) {
-  const s = getValidatorStatusClasses(validator.status);
-
-  return (
-    <div className="grid gap-4 border-b border-zinc-900 px-4 py-4 last:border-b-0 lg:grid-cols-[1.2fr_0.9fr_0.9fr_0.9fr_0.8fr] lg:items-center">
-      <div className="flex items-center gap-3">
-        <StatusDot className={s.dot} />
-        <div>
-          <p className="text-sm font-medium text-zinc-100">{validator.id}</p>
-          <p className="text-sm text-zinc-500">{validator.region}</p>
-        </div>
-      </div>
-
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
-          Last seen
-        </p>
-        <p className="text-sm text-zinc-400">{validator.lastSeen}</p>
-      </div>
-
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
-          Success rate
-        </p>
-        <p className="text-sm text-zinc-200">{validator.successRate}</p>
-      </div>
-
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
-          Avg latency
-        </p>
-        <p className="text-sm text-zinc-200">{validator.averageLatency}</p>
-      </div>
-
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:hidden">
-          Status
-        </p>
-        <p className={cx("text-sm", s.text)}>{s.label}</p>
-      </div>
-    </div>
-  );
-}
-
-function EventRow({ event }: { event: EventItem }) {
-  const icon =
-    event.type === "consensus" ? (
-      <Vote className="h-4 w-4" />
-    ) : event.type === "validator" ? (
-      <Server className="h-4 w-4" />
-    ) : event.type === "socket" ? (
-      <Waves className="h-4 w-4" />
-    ) : (
-      <Activity className="h-4 w-4" />
-    );
-
-  return (
-    <div className="border-b border-zinc-900 pb-3 last:border-b-0 last:pb-0">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-zinc-500">{icon}</span>
-          <p className="text-sm font-medium text-zinc-100">{event.message}</p>
-        </div>
-        <span className="text-xs text-zinc-600">{event.time}</span>
-      </div>
-      <p className="pl-7 text-sm leading-6 text-zinc-500">{event.type}</p>
     </div>
   );
 }
@@ -408,7 +322,8 @@ export default function DashboardPage() {
       const currentStatus = windows[windows.length - 1];
       const lastChecked = sortedTicks[0]
         ? new Date(sortedTicks[0].createdAt).toLocaleTimeString()
-        : "Never";
+        : "--";
+      const latestLatency = sortedTicks[0]?.latency ?? null;
 
       return {
         id: website.id,
@@ -416,70 +331,12 @@ export default function DashboardPage() {
         status: currentStatus,
         uptimePercentage,
         lastChecked,
+        latestLatency,
         uptimeTicks: windows,
       };
     });
   }, [websites]);
 
-  const validatorNodes = useMemo<ValidatorNode[]>(
-    () => [
-      {
-        id: "validator-a",
-        region: "Mumbai",
-        lastSeen: "3s ago",
-        successRate: "99.4%",
-        averageLatency: "183ms",
-        status: "healthy",
-      },
-      {
-        id: "validator-b",
-        region: "Singapore",
-        lastSeen: "6s ago",
-        successRate: "98.9%",
-        averageLatency: "201ms",
-        status: "healthy",
-      },
-      {
-        id: "validator-c",
-        region: "Frankfurt",
-        lastSeen: "22s ago",
-        successRate: "96.8%",
-        averageLatency: "289ms",
-        status: "lagging",
-      },
-    ],
-    []
-  );
-
-  const events = useMemo<EventItem[]>(
-    () => [
-      {
-        id: "1",
-        type: "consensus",
-        message: "Consensus marked api.atlas-uptime.dev operational",
-        time: "2s ago",
-      },
-      {
-        id: "2",
-        type: "validator",
-        message: "validator-b submitted signed health result from Singapore",
-        time: "7s ago",
-      },
-      {
-        id: "3",
-        type: "socket",
-        message: "Realtime dashboard stream connected",
-        time: "12s ago",
-      },
-      {
-        id: "4",
-        type: "monitor",
-        message: "status.atlas-uptime.dev received mixed validator responses",
-        time: "19s ago",
-      },
-    ],
-    []
-  );
 
   const stats = useMemo(() => {
     const total = processedWebsites.length;
@@ -491,16 +348,8 @@ export default function DashboardPage() {
         ? 0
         : processedWebsites.reduce((sum, site) => sum + site.uptimePercentage, 0) / total;
 
-    const activeValidators = validatorNodes.filter((node) => node.status !== "offline").length;
-
-    return {
-      total,
-      healthy,
-      down,
-      avgUptime,
-      activeValidators,
-    };
-  }, [processedWebsites, validatorNodes]);
+    return { total, healthy, down, avgUptime, };
+  }, [processedWebsites]);
 
   React.useEffect(() => {
     if (isDarkMode) {
@@ -527,9 +376,7 @@ export default function DashboardPage() {
                 Atlas Uptime
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                Consensus-aware monitor health, validator visibility, and realtime operational flow.
-              </p>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">Monitor website availability and uptime using distributed validator checks.</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -559,7 +406,6 @@ export default function DashboardPage() {
             value={String(stats.down)}
             valueClassName={stats.down > 0 ? "text-rose-300" : "text-zinc-100"}
           />
-          <Metric label="Validators" value={String(stats.activeValidators)} hint="Active nodes" />
           <Metric label="Average uptime" value={`${stats.avgUptime.toFixed(1)}%`} />
         </section>
 
@@ -568,16 +414,13 @@ export default function DashboardPage() {
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">
               Monitored websites
             </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-100">
-              Consensus-based monitor state
-            </h2>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-100">Website Monitoring</h2>
           </div>
 
           <div className="mb-4 hidden grid-cols-[minmax(0,2.2fr)_0.9fr_0.9fr_0.9fr_auto] gap-4 border-b border-zinc-900 pb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:grid">
             <div>Website</div>
             <div>Status</div>
             <div>Uptime</div>
-            <div>Decision</div>
             <div>Last check</div>
           </div>
 
@@ -604,30 +447,6 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="border-t border-zinc-900 py-8">
-          <div className="mb-4">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">
-              Validator nodes
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-zinc-100">
-              Node health and metadata
-            </h2>
-          </div>
-
-          <div className="mb-4 hidden grid-cols-[1.2fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-4 border-b border-zinc-900 pb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-600 lg:grid">
-            <div>Validator</div>
-            <div>Last seen</div>
-            <div>Success rate</div>
-            <div>Avg latency</div>
-            <div>Status</div>
-          </div>
-
-          <div className="border border-zinc-900">
-            {validatorNodes.map((validator) => (
-              <ValidatorRow key={validator.id} validator={validator} />
-            ))}
-          </div>
-        </section>
       </div>
 
       <AddWebsiteModal
