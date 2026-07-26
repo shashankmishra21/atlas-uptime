@@ -27,6 +27,7 @@ const availableValidators: { validatorId: string, socket: ServerWebSocket<unknow
 const PENDING_ROUNDS: Record<string, PendingRound> = {};
 const COST_PER_VALIDATION = 100; // in lamports
 
+
 Bun.serve({
     // fetch(req, server) {
     //     //   if (server.upgrade(req)) {
@@ -112,6 +113,18 @@ Bun.serve({
                 console.log(
                     `Received response ${round.responses.length}/${round.expectedResponses} for callback ${data.data.callbackId}`
                 );
+
+                if (round.responses.length === round.expectedResponses) {
+                    console.log(
+                        `All validator responses received for callback ${round.callbackId}`
+                    );
+
+                    if (round.timeout) {
+                        clearTimeout(round.timeout);
+                    }
+
+                    await processMonitoringRound(round);
+                }
             }
         },
         async close(ws: ServerWebSocket<unknown>) {
@@ -188,6 +201,16 @@ async function verifyMessage(message: string, publicKey: string, signature: stri
     return result;
 }
 
+async function processMonitoringRound(round: PendingRound) {
+
+    console.log(
+        `Processing ${round.websiteUrl}`
+    );
+
+    console.log(round.responses);
+
+}
+
 setInterval(async () => {
     try {
         const websitesToMonitor = await prismaClient.website.findMany({
@@ -200,13 +223,23 @@ setInterval(async () => {
 
             const callbackId = randomUUIDv7();
 
-            PENDING_ROUNDS[callbackId] = {
+            const round: PendingRound = {
                 websiteId: website.id,
-                    websiteUrl: website.url,
+                websiteUrl: website.url,
                 callbackId,
                 responses: [],
                 expectedResponses: availableValidators.length,
             };
+
+            PENDING_ROUNDS[callbackId] = round;
+
+            round.timeout = setTimeout(async () => {
+                console.log(
+                    `Timeout reached for ${round.websiteUrl}. Received ${round.responses.length}/${round.expectedResponses} responses`
+                );
+
+                await processMonitoringRound(round);
+            }, 5000);
 
             availableValidators.forEach((validator) => {
 
