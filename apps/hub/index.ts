@@ -5,9 +5,26 @@ import { PublicKey } from "@solana/web3.js";
 import nacl from "tweetnacl";
 import nacl_util from "tweetnacl-util";
 
+type ValidatorResponse = {
+    validatorId: string;
+    status: "Good" | "Bad";
+    latency: number;
+    receivedAt: Date;
+
+};
+
+type PendingRound = {
+    websiteId: string;
+    callbackId: string;
+    responses: ValidatorResponse[];
+    expectedResponses: number;
+    timeout?: Timer;
+    websiteUrl: string;
+};
+
 const availableValidators: { validatorId: string, socket: ServerWebSocket<unknown>, publicKey: string }[] = [];
 
-const CALLBACKS: { [callbackId: string]: (data: IncomingMessage) => void } = {}
+const PENDING_ROUNDS: Record<string, PendingRound> = {};
 const COST_PER_VALIDATION = 100; // in lamports
 
 Bun.serve({
@@ -41,19 +58,60 @@ Bun.serve({
         async message(ws: ServerWebSocket<unknown>, message: string) {
             const data: IncomingMessage = JSON.parse(message);
 
-            if (data.type === 'signup') {
-
+            if (data.type === "signup") {
                 const verified = await verifyMessage(
                     `Signed message for ${data.data.callbackId}, ${data.data.publicKey}`,
                     data.data.publicKey,
                     data.data.signedMessage
                 );
+
                 if (verified) {
                     await signupHandler(ws, data.data);
                 }
-            } else if (data.type === 'validate') {
-                CALLBACKS[data.data.callbackId]?.(data);
-                delete CALLBACKS[data.data.callbackId];
+
+            } else if (data.type === "validate") {
+
+                // Find the validator that sent this response
+                const validator = availableValidators.find(
+                    (v) => v.validatorId === data.data.validatorId
+                );
+
+                if (!validator) {
+                    console.log(`Unknown validator ${data.data.validatorId}`);
+                    return;
+                }
+
+                // Verify the signed response
+                const verified = await verifyMessage(
+                    `Replying to ${data.data.callbackId}`,
+                    validator.publicKey,
+                    data.data.signedMessage
+                );
+
+                if (!verified) {
+                    console.log(`Invalid signature from ${data.data.validatorId}`);
+                    return;
+                }
+
+                // Find the pending monitoring round
+                const round = PENDING_ROUNDS[data.data.callbackId];
+
+                if (!round) {
+                    console.log(`No pending round found for callback ${data.data.callbackId}`);
+                    return;
+                }
+
+                // Store the validator response
+                round.responses.push({
+                    validatorId: data.data.validatorId,
+                    status: data.data.status,
+                    latency: data.data.latency,
+                    receivedAt: new Date()
+                });
+
+                console.log(
+                    `Received response ${round.responses.length}/${round.expectedResponses} for callback ${data.data.callbackId}`
+                );
             }
         },
         async close(ws: ServerWebSocket<unknown>) {
@@ -139,8 +197,18 @@ setInterval(async () => {
         });
 
         for (const website of websitesToMonitor) {
+
+            const callbackId = randomUUIDv7();
+
+            PENDING_ROUNDS[callbackId] = {
+                websiteId: website.id,
+                    websiteUrl: website.url,
+                callbackId,
+                responses: [],
+                expectedResponses: availableValidators.length,
+            };
+
             availableValidators.forEach((validator) => {
-                const callbackId = randomUUIDv7();
 
                 console.log(
                     `Sending validate to ${validator.validatorId} ${website.url}`
@@ -156,43 +224,7 @@ setInterval(async () => {
                     })
                 );
 
-                CALLBACKS[callbackId] = async (data: IncomingMessage) => {
-                    try {
-                        if (data.type === "validate") {
-                            const {
-                                validatorId,
-                                status,
-                                latency,
-                                signedMessage,
-                            } = data.data;
 
-                            const verified = await verifyMessage(
-                                `Replying to ${callbackId}`,
-                                validator.publicKey,
-                                signedMessage
-                            );
-
-                            if (!verified) {
-                                console.log(`Invalid signature from ${validatorId}`);
-                                return;
-                            }
-
-                            await prismaClient.websiteTick.create({
-                                data: {
-                                    websiteId: website.id,
-                                    validatorId,
-                                    status,
-                                    latency,
-                                    createdAt: new Date(),
-                                },
-                            });
-
-                            console.log(`Response from ${validatorId} | ${website.url} | ${status} | ${latency}ms`);
-                        }
-                    } catch (err) {
-                        console.error(`Error processing validator response:`, err);
-                    }
-                };
             });
         }
     } catch (err) {
