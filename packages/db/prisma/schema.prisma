@@ -18,6 +18,9 @@ model Website {
   userId   String
   ticks    WebsiteTick[]
   disabled Boolean       @default(false)
+  currentStatus  WebsiteStatus?
+  lastCheckedAt  DateTime?
+  lastLatency    Float?
 }
 
 model Validator {
