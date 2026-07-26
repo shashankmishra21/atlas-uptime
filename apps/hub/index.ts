@@ -10,7 +10,6 @@ type ValidatorResponse = {
     status: "Good" | "Bad";
     latency: number;
     receivedAt: Date;
-
 };
 
 type PendingRound = {
@@ -99,6 +98,17 @@ Bun.serve({
 
                 if (!round) {
                     console.log(`No pending round found for callback ${data.data.callbackId}`);
+                    return;
+                }
+
+                const alreadyResponded = round.responses.some(
+                    response => response.validatorId === data.data.validatorId
+                );
+
+                if (alreadyResponded) {
+                    console.log(
+                        `Duplicate response from validator ${data.data.validatorId}`
+                    );
                     return;
                 }
 
@@ -203,11 +213,71 @@ async function verifyMessage(message: string, publicKey: string, signature: stri
 
 async function processMonitoringRound(round: PendingRound) {
 
-    console.log(
-        `Processing ${round.websiteUrl}`
-    );
+    const goodResponses = round.responses.filter(
+        response => response.status === "Good"
+    ).length;
 
-    console.log(round.responses);
+    const badResponses = round.responses.filter(
+        response => response.status === "Bad"
+    ).length;
+
+    let finalStatus: "Good" | "Bad" | "Unknown";
+
+    if (round.responses.length !== round.expectedResponses) {
+        finalStatus = "Unknown";
+    } else if (goodResponses > badResponses) {
+        finalStatus = "Good";
+    } else if (badResponses > goodResponses) {
+        finalStatus = "Bad";
+    } else {
+        finalStatus = "Unknown";
+    }
+
+    // Store every validator's observation
+    for (const response of round.responses) {
+        await prismaClient.websiteTick.create({
+            data: {
+                websiteId: round.websiteId,
+                validatorId: response.validatorId,
+                status: response.status,
+                latency: response.latency,
+            },
+        });
+    }
+
+    if (finalStatus !== "Unknown") {
+        const averageLatency =
+            round.responses.reduce(
+                (sum, response) => sum + response.latency,
+                0
+            ) / round.responses.length;
+
+        await prismaClient.website.update({
+            where: {
+                id: round.websiteId,
+            },
+            data: {
+                currentStatus: finalStatus,
+                lastCheckedAt: new Date(),
+                lastLatency: averageLatency,
+            },
+        });
+    }
+
+    console.log({
+        website: round.websiteUrl,
+        goodResponses,
+        badResponses,
+        expectedResponses: round.expectedResponses,
+        receivedResponses: round.responses.length,
+        finalStatus
+    });
+
+    if (round.timeout) {
+        clearTimeout(round.timeout);
+    }
+
+    delete PENDING_ROUNDS[round.callbackId];
 
 }
 
@@ -256,7 +326,6 @@ setInterval(async () => {
                         },
                     })
                 );
-
 
             });
         }
