@@ -465,7 +465,7 @@ export default function DashboardPage() {
               { url },
               {
                 headers: {
-                  Authorization: token,
+                  Authorization: `Bearer ${token}`,
                 },
               }
             );
