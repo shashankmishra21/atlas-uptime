@@ -1,55 +1,54 @@
 "use client";
-
 import { API_BACKEND_URL } from "@/config";
 import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+
+interface MonitoringCheck {
+  id: string;
+  status: "Good" | "Bad" | "Unknown";
+  latency: number;
+  createdAt: string;
+}
 
 interface Website {
   id: string;
   url: string;
-  ticks: {
-    id: string;
-    createdAt: string;
-    status: string;
-    latency: number;
-  }[];
+
+  currentStatus: "Good" | "Bad" | "Unknown" | null;
+  lastLatency: number | null;
+  lastCheckedAt: string | null;
+  rounds: MonitoringCheck[];
 }
 
 export function useWebsites() {
-  const { getToken } = useAuth();
-  const [websites, setWebsites] = useState<Website[]>([]);
+    const { getToken } = useAuth();
+    const [websites, setWebsites] = useState<Website[]>([]);
 
-  const refreshWebsites = useCallback(async () => {
-    try {
-      const token = await getToken();
+    async function refreshWebsites() {    
+        const token = await getToken();
+        const response = await axios.get(`${API_BACKEND_URL}/api/v1/websites`, {
+            headers: {
+                Authorization: token,
+            },
+        });
 
-      if (!token) {
-        console.error("No Clerk token available");
-        return;
-      }
+        console.log(response.data.websites);
 
-      const response = await axios.get(`${API_BACKEND_URL}/api/v1/websites`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
 
-      setWebsites(response.data.websites ?? []);
-    } catch (error) {
-      console.error("Failed to fetch websites:", error);
+        setWebsites(response.data.websites);
     }
-  }, [getToken]);
 
-  useEffect(() => {
-    refreshWebsites();
+    useEffect(() => {
+        refreshWebsites();
 
-    const interval = setInterval(() => {
-      refreshWebsites();
-    }, 1000 * 60);
+        const interval = setInterval(() => {
+            refreshWebsites();
+        }, 1000 * 60 * 1);
 
-    return () => clearInterval(interval);
-  }, [refreshWebsites]);
+        return () => clearInterval(interval);
+    }, []);
 
-  return { websites, refreshWebsites };
+    return { websites, refreshWebsites };
+
 }

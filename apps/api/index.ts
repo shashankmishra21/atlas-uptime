@@ -55,7 +55,13 @@ app.get("/api/v1/website/status", authMiddleware, async (req, res) => {
             disabled: false
         },
         include: {
-            ticks: true
+            ticks: true,
+            rounds: {
+                orderBy: {
+                    createdAt: "desc"
+                },
+                take: 10
+            }
         }
     })
 
@@ -71,10 +77,16 @@ app.get("/api/v1/websites", authMiddleware, async (req, res) => {
             disabled: false
         },
         include: {
-            ticks: true
-        }
+            rounds: {
+                orderBy: {
+                    createdAt: "desc",
+                },
+                take: 30,
+            },
+        },
     })
 
+    console.dir(websites, { depth: null });
     res.json({
         websites
     })
@@ -103,5 +115,5 @@ app.delete("/api/v1/website", authMiddleware, async (req, res) => {
 
 
 app.listen(8080, () => {
-  console.log("API running on port 3000");
+    console.log("API running on port 3000");
 });

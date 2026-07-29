@@ -284,58 +284,64 @@ export default function DashboardPage() {
   const { getToken } = useAuth();
 
   const processedWebsites = useMemo<ProcessedWebsite[]>(() => {
-    return websites.map((website) => {
-      const sortedTicks = [...website.ticks].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  return websites.map((website) => {
+    const sortedChecks = [...website.rounds].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    );
+
+    const uptimeTicks: UptimeStatus[] = sortedChecks
+      .slice(0, 10)
+      .reverse()
+      .map((check) =>
+        check.status === "Good"
+          ? "good"
+          : check.status === "Bad"
+            ? "bad"
+            : "unknown"
       );
 
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      const recentTicks = sortedTicks.filter(
-        (tick) => new Date(tick.createdAt) > thirtyMinutesAgo
-      );
+    while (uptimeTicks.length < 10) {
+      uptimeTicks.unshift("unknown");
+    }
 
-      const windows: UptimeStatus[] = [];
+    const totalChecks = sortedChecks.length;
 
-      for (let i = 0; i < 10; i++) {
-        const windowStart = new Date(Date.now() - (i + 1) * 3 * 60 * 1000);
-        const windowEnd = new Date(Date.now() - i * 3 * 60 * 1000);
+    const goodChecks = sortedChecks.filter(
+      (check) => check.status === "Good"
+    ).length;
 
-        const windowTicks = recentTicks.filter((tick) => {
-          const tickTime = new Date(tick.createdAt);
-          return tickTime >= windowStart && tickTime < windowEnd;
-        });
+    const uptimePercentage =
+      totalChecks === 0
+        ? 100
+        : (goodChecks / totalChecks) * 100;
 
-        const upTicks = windowTicks.filter((tick) => tick.status === "Good").length;
+    const status: UptimeStatus =
+      website.currentStatus === "Good"
+        ? "good"
+        : website.currentStatus === "Bad"
+          ? "bad"
+          : "unknown";
 
-        windows[9 - i] =
-          windowTicks.length === 0
-            ? "unknown"
-            : upTicks / windowTicks.length >= 0.5
-              ? "good"
-              : "bad";
-      }
+    return {
+      id: website.id,
+      url: website.url,
 
-      const totalTicks = sortedTicks.length;
-      const upTicks = sortedTicks.filter((tick) => tick.status === "Good").length;
-      const uptimePercentage = totalTicks === 0 ? 100 : (upTicks / totalTicks) * 100;
+      status,
 
-      const currentStatus = windows[windows.length - 1];
-      const lastChecked = sortedTicks[0]
-        ? new Date(sortedTicks[0].createdAt).toLocaleTimeString()
-        : "--";
-      const latestLatency = sortedTicks[0]?.latency ?? null;
+      uptimePercentage,
 
-      return {
-        id: website.id,
-        url: website.url,
-        status: currentStatus,
-        uptimePercentage,
-        lastChecked,
-        latestLatency,
-        uptimeTicks: windows,
-      };
-    });
-  }, [websites]);
+      lastChecked: website.lastCheckedAt
+        ? new Date(website.lastCheckedAt).toLocaleTimeString()
+        : "--",
+
+      latestLatency: website.lastLatency ?? 0,
+
+      uptimeTicks,
+    };
+  });
+}, [websites]);
 
 
   const stats = useMemo(() => {
@@ -465,7 +471,7 @@ export default function DashboardPage() {
               { url },
               {
                 headers: {
-                  Authorization: `Bearer ${token}`,
+                  Authorization: token,
                 },
               }
             );

@@ -262,6 +262,15 @@ async function processMonitoringRound(round: PendingRound) {
                 lastLatency: averageLatency,
             },
         });
+
+        await prismaClient.monitoringRound.create({
+            data: {
+                websiteId: round.websiteId,
+                status: finalStatus,
+                latency: averageLatency,
+            },
+        });
+
     }
 
     console.log({

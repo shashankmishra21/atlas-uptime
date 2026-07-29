@@ -21,6 +21,7 @@ model Website {
   currentStatus  WebsiteStatus?
   lastCheckedAt  DateTime?
   lastLatency    Float?
+  rounds         MonitoringRound[]
 }
 
 model Validator {
@@ -41,6 +42,15 @@ model WebsiteTick {
   latency     Float
   website     Website       @relation(fields: [websiteId], references: [id])
   validator   Validator     @relation(fields: [validatorId], references: [id])
+}
+
+model MonitoringRound {
+  id          String        @id @default(uuid())
+  websiteId   String
+  website     Website       @relation(fields: [websiteId], references: [id])
+  status      WebsiteStatus
+  latency     Float
+  createdAt   DateTime      @default(now())
 }
 
 enum WebsiteStatus {
