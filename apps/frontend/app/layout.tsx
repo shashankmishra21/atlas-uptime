@@ -1,23 +1,43 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Appbar } from "../components/Appbar";
-import { ThemeProvider } from "@/components/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const interTight = Inter_Tight({
   subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "Atlas Uptime",
-  description: "Validator-backed uptime monitoring dashboard",
+  title: "Atlas Uptime — Consensus Uptime Monitoring",
+  description:
+    "Atlas Uptime monitors websites through independent validators that sign every check. A hub aggregates results and decides status by majority consensus.",
+  openGraph: {
+    title: "Atlas Uptime — Consensus Uptime Monitoring",
+    description:
+      "Independent validators, signed checks, majority consensus, and a realtime dashboard of system state.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -26,15 +46,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClerkProvider>
-          <ThemeProvider attribute="class" forcedTheme="dark">
-            <Appbar />
-            {children}
-          </ThemeProvider>
-        </ClerkProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }
