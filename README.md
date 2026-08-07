@@ -1,34 +1,27 @@
-Atlas Uptime
-A distributed uptime monitoring platform that uses multiple validator nodes and a consensus algorithm to accurately determine website availability, reducing false positives caused by regional network issues.
+# Atlas Uptime
+
+Atlas Uptime is a distributed uptime monitoring platform that uses multiple validator nodes and a consensus algorithm to determine website availability, reducing false positives caused by regional network issues.
 
 Built with Next.js, Express.js, Bun, Prisma, PostgreSQL, WebSockets, and Clerk Authentication.
 
-Preview
-(Add screenshots/GIFs of your dashboard here after deployment.)
+---
 
-Features
-Monitor multiple websites from a single dashboard
+## Overview
 
-Distributed validator architecture
+- Monitor multiple websites from a single dashboard
+- Distributed validator architecture
+- Consensus-based website status detection
+- Cryptographically signed validator responses
+- WebSocket communication between hub and validators
+- Historical uptime and latency tracking
+- Secure authentication with Clerk
+- PostgreSQL database with Prisma ORM
 
-Consensus-based website status detection
+---
 
-Cryptographically signed validator responses
+## Architecture
 
-WebSocket communication between Hub and Validators
-
-Historical uptime tracking
-
-Average latency calculation
-
-Secure authentication using Clerk
-
-Responsive, modern dashboard
-
-PostgreSQL database with Prisma ORM
-
-Architecture
-text
+```text
                     +------------------+
                     |    Frontend      |
                     |     Next.js      |
@@ -66,201 +59,238 @@ text
          |                    |                      |
          v                    v                      v
    Validator 1          Validator 2          Validator 3
-How It Works
-1. User adds a website
-Users authenticate using Clerk and register websites for monitoring.
+```
 
-2. Hub assigns monitoring tasks
-Every monitoring cycle, the Hub sends validation requests to all connected validator nodes through WebSockets.
+---
 
-3. Validators perform health checks
+## How It Works
+
+### 1. User adds a website
+
+- Users authenticate using Clerk.
+- Authenticated users register websites to be monitored.
+
+### 2. Hub assigns monitoring tasks
+
+- On each monitoring cycle, the hub sends validation requests to all connected validators via WebSockets.
+
+### 3. Validators perform health checks
+
 Each validator:
 
-Pings the website
+- Pings the website
+- Measures latency
+- Determines whether the website is reachable
+- Signs the response cryptographically
+- Sends the signed result back to the hub
 
-Measures latency
+### 4. Consensus algorithm
 
-Determines whether the website is reachable
+The hub:
 
-Signs the response cryptographically
-
-Sends the signed result back to the Hub
-
-4. Consensus algorithm
-The Hub:
-
-Verifies validator signatures
-
-Prevents duplicate responses
-
-Waits up to 5 seconds for validator replies
-
-Calculates consensus using majority voting
+- Verifies validator signatures
+- Prevents duplicate responses
+- Waits up to a configured timeout (e.g., 5 seconds) for replies
+- Computes a majority-vote consensus for the website status
 
 Example:
 
-Validator	Status
-Node 1	Good
-Node 2	Good
-Node 3	Bad
-Final consensus: Good
+| Validator | Status |
+|----------|--------|
+| Node 1   | Good   |
+| Node 2   | Good   |
+| Node 3   | Bad    |
 
-5. Data storage
-The Hub stores:
+Final consensus: **Good**
 
-Individual validator observations
+### 5. Data storage
 
-Consensus result
+The hub stores:
 
-Average latency
+- Individual validator observations
+- Consensus result
+- Average latency
+- Latest website status
+- Monitoring history
 
-Latest website status
+### 6. Dashboard
 
-Monitoring history
+The dashboard allows users to view:
 
-6. Dashboard
-Users can view:
+- Current website status
+- Historical uptime
+- Latency
+- Last checked time
+- Uptime percentage
 
-Current website status
+---
 
-Historical uptime
+## Consensus Logic
 
-Latency
-
-Last checked time
-
-Uptime percentage
-
-Consensus Logic
 Atlas Uptime uses a simple majority-vote consensus.
 
-Example: Good, Good, Bad → Final status = Good
+Example: `Good, Good, Bad` → final status = **Good**
 
-If enough validators do not respond within the timeout window, the monitoring round is marked as Unknown, preventing inaccurate results.
+If not enough validators respond within the timeout window, the monitoring round is marked as `Unknown` to avoid inaccurate results.
 
-Tech Stack
-Frontend: Next.js, React, TypeScript, Tailwind CSS, Shadcn UI
+---
 
-Backend: Express.js, Bun Runtime, WebSockets
+## Tech Stack
 
-Database: PostgreSQL, Prisma ORM, Neon
+**Frontend**
 
-Authentication: Clerk
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
 
-Security: Ed25519 Digital Signatures, JWT Authentication
+**Backend**
 
-Project Structure
-text
+- Express.js
+- Bun runtime
+- WebSockets
+
+**Database**
+
+- PostgreSQL
+- Prisma ORM
+- Neon
+
+**Authentication**
+
+- Clerk
+
+**Security**
+
+- Ed25519 digital signatures
+- JWT-based authentication
+
+---
+
+## Project Structure
+
+```text
 atlas-uptime/
 ├── apps/
-│   ├── frontend/
-│   ├── api/
-│   ├── hub/
-│   └── validator/
+│   ├── frontend/   # Next.js dashboard
+│   ├── api/        # REST API (Express)
+│   ├── hub/        # WebSocket hub + consensus engine
+│   └── validator/  # Validator node service
 │
 └── packages/
-    ├── common/
-    └── db/
-Running Locally
-Clone repository
-bash
+    ├── common/     # Shared types and utilities
+    └── db/         # Prisma schema and database client
+```
+
+---
+
+## Running Locally
+
+### 1. Clone repository
+
+```bash
 git clone https://github.com/shashankmishra21/atlas-uptime.git
 cd atlas-uptime
-Install dependencies
-bash
-bun install
-Configure environment variables
-Create the required .env files for the API, Hub, Validator, and Database.
+```
 
-text
+### 2. Install dependencies
+
+```bash
+bun install
+```
+
+### 3. Configure environment variables
+
+Create the required `.env` files for the API, hub, validator, and frontend.
+
+Example:
+
+```env
 DATABASE_URL=
 CLERK_SECRET_KEY=
 CLERK_PUBLISHABLE_KEY=
 JWT_PUBLIC_KEY=
-Run the applications
-API
+```
 
-bash
+### 4. Run the services
+
+API:
+
+```bash
 cd apps/api
 bun index.ts
-Hub
+```
 
-bash
+Hub:
+
+```bash
 cd apps/hub
 bun index.ts
-Validator
+```
 
-bash
+Validator:
+
+```bash
 cd apps/validator
 bun index.ts
-Frontend
+```
 
-bash
+Frontend:
+
+```bash
 cd apps/frontend
 bun run dev
-Current Features
-User authentication
+```
 
-Website registration
+---
 
-Multi-validator monitoring
+## Current Features
 
-WebSocket communication
+- User authentication
+- Website registration
+- Multi-validator monitoring
+- WebSocket communication between hub and validators
+- Digital signature verification
+- Majority-vote consensus algorithm
+- Timeout handling for slow/unresponsive validators
+- Duplicate response prevention
+- Historical monitoring data
+- Basic dashboard analytics
 
-Digital signature verification
+---
 
-Consensus algorithm
+## Planned Improvements
 
-Timeout handling
+- Real-time dashboard updates via WebSockets
+- Public status pages
+- Email notifications
+- Discord / Slack alerts
+- Regional validator analytics
+- Incident timeline
+- Custom monitoring intervals
+- SSL certificate monitoring
 
-Duplicate response prevention
+---
 
-Historical monitoring data
+## What I Learned
 
-Dashboard analytics
-
-Upcoming Features
-Real-time dashboard updates (frontend WebSockets)
-
-Public status pages
-
-Email notifications
-
-Discord / Slack alerts
-
-Regional validator analytics
-
-Incident timeline
-
-Custom monitoring interval
-
-SSL certificate monitoring
-
-What I Learned
 This project helped me gain practical experience with:
 
-Distributed system design
+- Designing a small distributed system
+- WebSocket-based communication patterns
+- Implementing and reasoning about consensus algorithms
+- Backend architecture and service separation
+- Database schema design with Prisma and PostgreSQL
+- Authentication and authorization using Clerk and JWTs
+- Real-time monitoring concepts (uptime, latency, history)
+- Monorepo development with Turborepo
 
-WebSocket communication
+---
 
-Consensus algorithms
+## Author
 
-Backend architecture
+**Shashank Mishra**
 
-Database design
-
-Authentication and authorization
-
-Real-time monitoring systems
-
-Prisma ORM and PostgreSQL
-
-Monorepo development using Turborepo
-
-Author
-Shashank Mishra
-GitHub: shashankmishra21
-LinkedIn: (Add your LinkedIn profile URL)
-
-If you found this project interesting, consider giving it a star on GitHub.
-
+- GitHub: [shashankmishra21](https://github.com/shashankmishra21)
+- LinkedIn: *(add your LinkedIn profile URL here)*
