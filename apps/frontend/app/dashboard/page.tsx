@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronUp, Moon, Plus, Sun } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useWebsites } from "@/hooks/useWebsites";
 import { API_BACKEND_URL } from "@/config";
-import { useAuth, useUser, RedirectToSignIn } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 
 type UptimeStatus = "good" | "bad" | "unknown";
 
@@ -73,12 +73,9 @@ function StatCard({
   return (
     <div className="bg-surface px-6 py-7">
       <p className="eyebrow">{label}</p>
-      <p
-        className={cx(
-          "mt-4 font-mono text-4xl font-semibold tracking-tight tabular-nums",
-          valueClassName,
-        )}
-      >
+      <p className={cx("mt-4 font-mono text-4xl font-semibold tracking-tight tabular-nums",
+        valueClassName,
+      )}>
         {value}
       </p>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{caption}</p>
@@ -140,8 +137,7 @@ function AddWebsiteModal({
       <button
         aria-label="Close"
         onClick={() => onClose(null)}
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-      />
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       <div className="panel relative w-full max-w-md overflow-hidden p-7">
         <div className="pointer-events-none absolute inset-0 aurora opacity-40" />
         <div className="relative">
@@ -161,21 +157,18 @@ function AddWebsiteModal({
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
               autoFocus
-              className="mt-2 w-full rounded-xl border border-input bg-background/60 px-4 py-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-signal/60 focus:ring-2 focus:ring-ring"
-            />
+              className="mt-2 w-full rounded-xl border border-input bg-background/60 px-4 py-3 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-signal/60 focus:ring-2 focus:ring-ring" />
           </label>
 
           <div className="mt-7 flex items-center justify-end gap-3">
             <button
               onClick={() => onClose(null)}
-              className="rounded-full border border-border bg-surface/60 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:border-signal/40 hover:text-foreground"
-            >
+              className="rounded-full border border-border bg-surface/60 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:border-signal/40 hover:text-foreground">
               Cancel
             </button>
             <button
               onClick={() => onClose(url)}
-              className="group inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-medium text-signal-foreground shadow-[var(--shadow-signal)] transition-all hover:brightness-105"
-            >
+              className="group inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-medium text-signal-foreground shadow-[var(--shadow-signal)] transition-all hover:brightness-105">
               Add website
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </button>
@@ -195,8 +188,7 @@ function WebsiteRow({ website }: { website: ProcessedWebsite }) {
     <li>
       <button
         onClick={() => setExpanded((prev) => !prev)}
-        className="w-full px-6 py-4 text-left transition-colors hover:bg-surface-raised"
-      >
+        className="w-full px-6 py-4 text-left transition-colors hover:bg-surface-raised">
         <div className="grid grid-cols-2 items-center gap-4 md:grid-cols-[1.5fr_0.9fr_1.1fr_0.8fr_0.8fr]">
           <div className="col-span-2 flex items-center gap-3 md:col-span-1">
             <span
@@ -205,8 +197,8 @@ function WebsiteRow({ website }: { website: ProcessedWebsite }) {
                 website.status === "good"
                   ? { animation: "atlas-pulse 2.6s ease-in-out infinite" }
                   : undefined
-              }
-            />
+              } />
+
             <div className="min-w-0">
               <p className="truncate font-mono text-[13px] text-foreground">{hostname}</p>
               <p className="truncate font-mono text-[11px] text-muted-foreground">{website.url}</p>
@@ -248,8 +240,7 @@ function WebsiteRow({ website }: { website: ProcessedWebsite }) {
         <div className="border-t border-border bg-background/40 px-6 py-6">
           <div
             className="rounded-2xl border border-border bg-surface p-6"
-            style={{ animation: "atlas-rise 320ms ease-out both" }}
-          >
+            style={{ animation: "atlas-rise 320ms ease-out both" }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <span
@@ -279,12 +270,10 @@ function WebsiteRow({ website }: { website: ProcessedWebsite }) {
               <MiniStat
                 label="Current status"
                 value={getStatusText(website.status)}
-                valueClassName={tone.text}
-              />
+                valueClassName={tone.text}/>
               <MiniStat
                 label="Latest latency"
-                value={website.latestLatency > 0 ? `${website.latestLatency} ms` : "--"}
-              />
+                value={website.latestLatency > 0 ? `${website.latestLatency} ms` : "--"} />
               <MiniStat label="Last checked" value={website.lastChecked} />
             </div>
           </div>
@@ -375,34 +364,20 @@ export default function DashboardPage() {
             <span className="relative grid size-7 place-items-center rounded-md border border-signal/40 bg-signal/10">
               <span className="size-2 rounded-full bg-signal" />
             </span>
-            <span className="font-display text-[15px] font-semibold tracking-tight">
-              Atlas Uptime
-            </span>
+            <span className="font-display text-[15px] font-semibold tracking-tight">Atlas Uptime</span>
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
             <span className="text-foreground">Monitors</span>
-            <Link href="/#validators" className="transition-colors hover:text-foreground">
-              Validators
-            </Link>
-            <Link href="/#architecture" className="transition-colors hover:text-foreground">
-              Architecture
-            </Link>
+            <Link href="/#validators" className="transition-colors hover:text-foreground">Validators</Link>
+            <Link href="/#architecture" className="transition-colors hover:text-foreground">Architecture</Link>
           </nav>
 
           <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              aria-label="Toggle theme"
-              className="grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-signal/40 hover:text-foreground"
-            >
-              {isDarkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </button>
+
             <button
               onClick={() => setIsModalOpen(true)}
-              className="group inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-medium text-signal-foreground shadow-[var(--shadow-signal)] transition-all hover:brightness-105"
-            >
-              Add website
+              className="group inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-medium text-signal-foreground shadow-[var(--shadow-signal)] transition-all hover:brightness-105">Add website
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
@@ -417,9 +392,7 @@ export default function DashboardPage() {
             <span className="h-px w-8 bg-signal/60" />
             <span className="eyebrow">Operations console</span>
           </div>
-          <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
-            Your targets, decided by validator agreement.
-          </h1>
+          <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">Your targets, decided by validator agreement.</h1>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
             Every status below is the result the connected validators agreed on — not one blind
             check from a single vantage point.
@@ -432,25 +405,21 @@ export default function DashboardPage() {
           <StatCard
             label="Monitors"
             value={String(stats.total)}
-            caption="Targets assigned to the validator network"
-          />
+            caption="Targets assigned to the validator network" />
           <StatCard
             label="Operational"
             value={String(stats.healthy)}
             caption="Confirmed up by majority agreement"
-            valueClassName="text-signal"
-          />
+            valueClassName="text-signal" />
           <StatCard
             label="Down"
             value={String(stats.down)}
             caption="Reported down by the reporting validators"
-            valueClassName={stats.down > 0 ? "text-destructive" : undefined}
-          />
+            valueClassName={stats.down > 0 ? "text-destructive" : undefined} />
           <StatCard
             label="Average uptime"
             value={`${stats.avgUptime.toFixed(1)}%`}
-            caption="Across all monitored targets"
-          />
+            caption="Across all monitored targets" />
         </div>
       </section>
 
@@ -490,10 +459,8 @@ export default function DashboardPage() {
                 </p>
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="group mt-7 inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-medium text-signal-foreground shadow-[var(--shadow-signal)] transition-all hover:brightness-105"
-                >
-                  <Plus className="size-4" />
-                  Add first website
+                  className="group mt-7 inline-flex items-center gap-2 rounded-full bg-signal px-5 py-2.5 text-sm font-medium text-signal-foreground shadow-[var(--shadow-signal)] transition-all hover:brightness-105">
+                  <Plus className="size-4" /> Add first website
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
               </div>
@@ -515,23 +482,6 @@ export default function DashboardPage() {
             setIsModalOpen(false);
             return;
           }
-
-          // try {
-          //   if (API_BACKEND_URL) {
-          //     await fetch(`${API_BACKEND_URL}/api/v1/website`, {
-          //       method: "POST",
-          //       headers: { "Content-Type": "application/json" },
-          //       body: JSON.stringify({ url }),
-          //     });
-          //     setIsModalOpen(false);
-          //     await refreshWebsites();
-          //   } else {
-          //     setIsModalOpen(false);
-          //   }
-          // } catch (error) {
-          //   console.error(error);
-          //   setIsModalOpen(false);
-          // }
 
           try {
             if (API_BACKEND_URL) {
