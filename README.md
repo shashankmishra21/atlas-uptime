@@ -292,5 +292,5 @@ This project helped me gain practical experience with:
 
 **Shashank Mishra**
 
-- GitHub: [shashankmishra21](https://github.com/shashankmishra21)
-- LinkedIn: *(add your LinkedIn profile URL here)*
+- GitHub: https://github.com/shashankmishra21
+- LinkedIn: https://www.linkedin.com/in/mishrashashank2106
