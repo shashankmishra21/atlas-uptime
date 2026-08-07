@@ -5,14 +5,20 @@ import cors from 'cors';
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.post("/api/v1/website", authMiddleware, async (req, res) => {
     try {
         const userId = req.userId!;
         const { url } = req.body;
 
-        console.log("========== CREATE WEBSITE ==========");
         console.log("USER ID:", userId);
         console.log("BODY:", req.body);
         console.log("URL:", url);
@@ -29,10 +35,8 @@ app.post("/api/v1/website", authMiddleware, async (req, res) => {
         });
 
     } catch (error: any) {
-        console.log("========== ERROR ==========");
-        console.log("CODE:", error.code);
+
         console.log("MESSAGE:", error.message);
-        console.log("META:", error.meta);
         console.dir(error, { depth: null });
 
         res.status(500).json({
