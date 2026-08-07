@@ -18,41 +18,6 @@ const CALLBACKS: {[callbackId: string]: (data: SignupOutgoingMessage) => void} =
 
 let validatorId: string | null = null;
 
-// async function main() {
-//     const keypair = Keypair.fromSecretKey(
-//         Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY!))
-//     );
-//     console.log("Validator Public Key:", keypair.publicKey.toBase58());
-//     const ws = new WebSocket("ws://localhost:8081");
-
-//     ws.onmessage = async (event) => {
-//         const data: OutgoingMessage = JSON.parse(event.data);
-//         if (data.type === 'signup') {
-//             CALLBACKS[data.data.callbackId]?.(data.data)
-//             delete CALLBACKS[data.data.callbackId];
-//         } else if (data.type === 'validate') {
-//             await validateHandler(ws, data.data, keypair);
-//         }
-//     }
-
-//     ws.onopen = async () => {
-//         const callbackId = randomUUIDv7();
-//         CALLBACKS[callbackId] = (data: SignupOutgoingMessage) => {
-//             validatorId = data.validatorId;
-//         }
-//         const signedMessage = await signMessage(`Signed message for ${callbackId}, ${keypair.publicKey}`, keypair);
-
-//         ws.send(JSON.stringify({
-//             type: 'signup',
-//             data: {
-//                 callbackId,
-//                 ip: '127.0.0.1',
-//                 publicKey: keypair.publicKey,
-//                 signedMessage,
-//             },
-//         }));
-//     }
-// }
 
 async function main() {
     const keypair = Keypair.fromSecretKey(

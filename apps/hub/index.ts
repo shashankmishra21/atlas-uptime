@@ -24,22 +24,8 @@ type PendingRound = {
 const availableValidators: { validatorId: string, socket: ServerWebSocket<unknown>, publicKey: string }[] = [];
 
 const PENDING_ROUNDS: Record<string, PendingRound> = {};
-const COST_PER_VALIDATION = 100; // in lamports
-
 
 Bun.serve({
-    // fetch(req, server) {
-    //     //   if (server.upgrade(req)) {
-    //     //     return;
-    //     //   }
-
-    //     if (server.upgrade(req, {
-    //         data: {}
-    //     })) {
-    //         return;
-    //     }
-    //     return new Response("Upgrade failed", { status: 500 });
-    // }
     fetch(req, server) {
         console.log("Incoming request:", req.url);
 
@@ -176,7 +162,7 @@ async function signupHandler(ws: ServerWebSocket<unknown>, { ip, publicKey, sign
         return;
     }
 
-    // Given the ip, return the location
+
     const validator = await prismaClient.validator.create({
         data: {
             ip,
