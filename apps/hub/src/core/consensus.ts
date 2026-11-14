@@ -5,6 +5,7 @@ export async function processMonitoringRound(round: PendingRound) {
     if (round.timeout) {
         clearTimeout(round.timeout);
     }
+    
 
     if (!PENDING_ROUNDS[round.callbackId]) return;
 
@@ -56,6 +57,7 @@ export async function processMonitoringRound(round: PendingRound) {
             },
         });
     }
+
 
     console.log({
         website: round.websiteUrl,

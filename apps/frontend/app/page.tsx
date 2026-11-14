@@ -376,28 +376,19 @@ export default function HomePage() {
       <div className="relative">
         <div className="pointer-events-none absolute inset-0 aurora opacity-70" />
         <div className="pointer-events-none absolute inset-0 grid-field" />
-        <Section className="relative pb-20 pt-24 sm:pt-32">
+        <Section className="relative pb-28 pt-24 sm:pt-20">
           <div className="grid items-end gap-14 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3 py-1.5">
-                <span
-                  className="size-1.5 rounded-full bg-signal"
-                  style={{ animation: "atlas-pulse 2.4s ease-in-out infinite" }}
-                />
-                <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                  Distributed uptime monitoring
-                </span>
-              </div>
+             
 
               <h1 className="mt-7 font-display text-[2.75rem] font-semibold leading-[1.03] tracking-[-0.03em] sm:text-6xl lg:text-[4.25rem]">
-                Monitor websites through <span className="text-signal-gradient">independent validators</span>, not a
-                single blind check.
+                Distributed eyes <span className="text-signal-gradient">on your uptime, 24/7</span>
               </h1>
 
               <p className="mt-7 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
                 Every check is performed independently by a separate validator node, signed with that node&apos;s key,
                 and streamed back to a coordinating hub. The hub confirms status only when the connected validators
-                agree — a majority decision, not one observer&apos;s guess. The network runs on 3 validator nodes today
+                agree - a majority decision, not one observer&apos;s guess. The network runs on 3 validator nodes today
                 and is built to scale to many more.
               </p>
 

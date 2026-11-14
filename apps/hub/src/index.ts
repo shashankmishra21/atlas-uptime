@@ -18,6 +18,7 @@ Bun.serve({
     },
     websocket: {
         async message(ws: ServerWebSocket<unknown>, message: string) {
+
             const data: IncomingMessage = JSON.parse(message);
 
             if (data.type === "signup") {
@@ -30,7 +31,7 @@ Bun.serve({
                 if (verified) {
                     await signupHandler(ws, data.data);
                 } else {
-                    console.log("❌ Invalid signup signature");
+                    console.log(" Invalid signup signature");
                 }
 
             } else if (data.type === "validate") {
@@ -39,7 +40,7 @@ Bun.serve({
                 );
 
                 if (!validator) {
-                    console.log(`⚠️ Unknown validator ${data.data.validatorId}`);
+                    console.log(`Unknown validator ${data.data.validatorId}`);
                     return;
                 }
 
@@ -50,7 +51,7 @@ Bun.serve({
                 );
 
                 if (!verified) {
-                    console.log(`❌ Invalid validation signature from ${data.data.validatorId}`);
+                    console.log(`Invalid validation signature from ${data.data.validatorId}`);
                     return;
                 }
 
@@ -79,7 +80,8 @@ Bun.serve({
             const index = availableValidators.findIndex(v => v.socket === ws);
             if (index !== -1) {
                 availableValidators.splice(index, 1);
-                console.log(`🔌 Validator disconnected. Active count: ${availableValidators.length}`);
+
+                console.log(`Validator disconnected. Active count: ${availableValidators.length}`);
             }
         }
     },
@@ -92,6 +94,7 @@ async function signupHandler(
     let validatorDb = await prismaClient.validator.findFirst({
         where: { publicKey },
     });
+
 
     if (!validatorDb) {
         validatorDb = await prismaClient.validator.create({
@@ -108,6 +111,7 @@ async function signupHandler(
     }));
 
     // Avoid duplicate pushes if same socket reconnects
+
     const existingIndex = availableValidators.findIndex(v => v.socket === ws);
     if (existingIndex === -1) {
         availableValidators.push({
@@ -117,9 +121,9 @@ async function signupHandler(
         });
     }
 
-    console.log(`✅ Validator connected: ${validatorDb.id} | Total active: ${availableValidators.length}`);
+    console.log(`Validator connected: ${validatorDb.id} | Total active: ${availableValidators.length}`);
 }
 
 // Start the periodic website monitoring loop
 startMonitoringScheduler();
-console.log(`🚀 Hub Orchestrator running on port ${PORT}`);
+console.log(`Hub Orchestrator running on port ${PORT}`);

@@ -7,7 +7,7 @@ export function startMonitoringScheduler() {
     setInterval(async () => {
         try {
             if (availableValidators.length === 0) {
-                console.log("⚠️ No active validators connected. Skipping monitoring round.");
+                console.log("No active validators connected. Skipping monitoring round.");
                 return;
             }
 
@@ -28,6 +28,7 @@ export function startMonitoringScheduler() {
 
                 PENDING_ROUNDS[callbackId] = round;
 
+                
                 // Timeout fallback if validators don't respond within 5 seconds
                 round.timeout = setTimeout(async () => {
                     console.log(`⏱️ Timeout reached for ${round.websiteUrl}. Received ${round.responses.length}/${round.expectedResponses}`);
@@ -47,8 +48,10 @@ export function startMonitoringScheduler() {
                     );
                 });
             }
-        } catch (err) {
-            console.error("❌ Hub monitoring cycle failed:", err);
+        } 
+        catch (err) {
+            console.error("Hub monitoring cycle failed:", err);
         }
     }, 60 * 1000);
+
 }
